@@ -15,6 +15,7 @@ import sys
 import threading
 import time
 import requests
+import socket
 
 CONFIG_PATH = os.environ.get('CONFIG_PATH', os.getcwd())
 
@@ -49,7 +50,6 @@ def deleteEntries(type):
                 "DELETE", option)
             print("🗑️ Deleted stale record " + identifier)
 
-
 def getIPs():
     a = None
     aaaa = None
@@ -58,10 +58,13 @@ def getIPs():
     global purgeUnknownRecords
     if ipv4_enabled:
         try:
-            a = requests.get(
-                "https://1.1.1.1/cdn-cgi/trace").text.split("\n")
-            a.pop()
-            a = dict(s.split("=") for s in a)["ip"]
+            # 创建一个UDP套接字
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            # 连接到一个外部IP地址（这里使用谷歌的DNS服务器）
+            sock.connect(("1.1.1.1", 80))
+            # 获取本地IP地址
+            local_ip = sock.getsockname()[0]
+            a = local_ip
         except Exception:
             global shown_ipv4_warning
             if not shown_ipv4_warning:
